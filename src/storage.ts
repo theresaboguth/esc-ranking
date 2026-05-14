@@ -27,25 +27,25 @@ export function saveRating(
   localStorage.setItem(STORAGE_KEY, JSON.stringify(all));
 
   if (userId) {
-    supabase
-      .from("ratings")
-      .upsert(
-        {
-          user_id: userId,
-          country_code: rating.countryCode,
-          semi_final: semiFinal ?? 1,
-          musik: rating.ratings.musik,
-          performance: rating.ratings.performance,
-          kostuem: rating.ratings.kostuem,
-          show: rating.ratings.show,
-          wow_faktor: rating.ratings.wowFaktor,
-          esc_feeling: rating.ratings.escFeeling,
-          updated_at: new Date().toISOString(),
-        },
-        { onConflict: "user_id,country_code" },
-      )
-      .then(() => {})
-      .catch(() => {});
+    void Promise.resolve(
+      supabase
+        .from("ratings")
+        .upsert(
+          {
+            user_id: userId,
+            country_code: rating.countryCode,
+            semi_final: semiFinal ?? 1,
+            musik: rating.ratings.musik,
+            performance: rating.ratings.performance,
+            kostuem: rating.ratings.kostuem,
+            show: rating.ratings.show,
+            wow_faktor: rating.ratings.wowFaktor,
+            esc_feeling: rating.ratings.escFeeling,
+            updated_at: new Date().toISOString(),
+          },
+          { onConflict: "user_id,country_code" },
+        ),
+    ).catch(() => {});
   }
 }
 
@@ -55,13 +55,13 @@ export function deleteRating(countryCode: string, userId?: string | null): void 
   localStorage.setItem(STORAGE_KEY, JSON.stringify(all));
 
   if (userId) {
-    supabase
-      .from("ratings")
-      .delete()
-      .eq("user_id", userId)
-      .eq("country_code", countryCode)
-      .then(() => {})
-      .catch(() => {});
+    void Promise.resolve(
+      supabase
+        .from("ratings")
+        .delete()
+        .eq("user_id", userId)
+        .eq("country_code", countryCode),
+    ).catch(() => {});
   }
 }
 
