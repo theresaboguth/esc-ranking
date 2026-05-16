@@ -8,6 +8,7 @@ import LoginPage from "./pages/LoginPage";
 import HomePage from "./pages/HomePage";
 import RatingPage from "./pages/RatingPage";
 import ResultsPage from "./pages/ResultsPage";
+import BingoPage from "./pages/BingoPage";
 import type { ReactNode } from "react";
 
 function RequireUser({ children }: { children: ReactNode }) {
@@ -43,6 +44,7 @@ function AppRoutes() {
         <Route path="/" element={<RequireUser><HomePage /></RequireUser>} />
         <Route path="/rate/:code" element={<RequireUser><RatingPage /></RequireUser>} />
         <Route path="/results" element={<RequireUser><ResultsPage /></RequireUser>} />
+        <Route path="/bingo" element={<RequireUser><BingoPage /></RequireUser>} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
       <NotificationToastContainer toasts={toasts} onRemove={removeToast} />

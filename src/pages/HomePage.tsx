@@ -32,6 +32,12 @@ export default function HomePage() {
               {ratedCount}/{CONTESTANTS.length} bewertet
             </span>
             <button
+              className={styles.bingoBtn}
+              onClick={() => navigate("/bingo")}
+            >
+              🎱 Bingo
+            </button>
+            <button
               className={styles.resultsBtn}
               onClick={() => navigate("/results")}
               disabled={Object.keys(ratings).length === 0}
