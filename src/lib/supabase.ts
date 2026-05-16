@@ -50,21 +50,7 @@ const competitors = CONTESTANTS;
 
 // ── Fetch ──────────────────────────────────────────────────────────────────
 
-// ── Bingo ranking types ────────────────────────────────────────────────────
-
-export interface BingoRankingEntry {
-  userId: string;
-  username: string;
-  bingoCount: number;
-  updatedAt: string;
-}
-
-type BingoRow = {
-  user_id: string;
-  bingo_count: number;
-  updated_at: string;
-  users: { username: string } | null;
-};
+// ── Bingo board types ──────────────────────────────────────────────────────
 
 export async function saveBingoBoard(
   userId: string,
@@ -78,21 +64,46 @@ export async function saveBingoBoard(
   );
 }
 
-export async function fetchBingoRanking(): Promise<BingoRankingEntry[]> {
+// ── Bingo wins ─────────────────────────────────────────────────────────────
+
+export interface BingoWin {
+  userId: string;
+  username: string;
+  bingoType: string;
+  achievedAt: string;
+}
+
+type BingoWinRow = {
+  user_id: string;
+  bingo_type: string;
+  achieved_at: string;
+  users: { username: string } | null;
+};
+
+export async function insertBingoWin(userId: string, bingoType: string): Promise<void> {
+  const { data } = await supabase
+    .from("bingo_wins")
+    .select("id")
+    .eq("user_id", userId)
+    .eq("bingo_type", bingoType)
+    .maybeSingle();
+  if (data) return;
+  await supabase.from("bingo_wins").insert({ user_id: userId, bingo_type: bingoType });
+}
+
+export async function fetchBingoWins(): Promise<BingoWin[]> {
   const { data, error } = await supabase
-    .from("bingo_boards")
-    .select("user_id, bingo_count, updated_at, users(username)")
-    .gt("bingo_count", 0)
-    .order("bingo_count", { ascending: false })
-    .order("updated_at", { ascending: true });
+    .from("bingo_wins")
+    .select("user_id, bingo_type, achieved_at, users(username)")
+    .order("achieved_at", { ascending: true });
 
   if (error || !data) return [];
 
-  return (data as unknown as BingoRow[]).map((r) => ({
+  return (data as unknown as BingoWinRow[]).map((r) => ({
     userId: r.user_id,
     username: r.users?.username ?? r.user_id,
-    bingoCount: r.bingo_count,
-    updatedAt: r.updated_at,
+    bingoType: r.bingo_type,
+    achievedAt: r.achieved_at,
   }));
 }
 

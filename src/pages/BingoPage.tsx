@@ -1,10 +1,143 @@
 import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { useUser } from "../context/UserContext";
-import { saveBingoBoard, supabase } from "../lib/supabase";
+import { saveBingoBoard, insertBingoWin, fetchBingoWins, supabase } from "../lib/supabase";
+import type { BingoWin } from "../lib/supabase";
 import styles from "./BingoPage.module.css";
 
 type BingoChannel = ReturnType<typeof supabase.channel>;
+
+// ── Ranking helpers ────────────────────────────────────────────────────────
+
+function formatDate(iso: string): string {
+  return new Date(iso).toLocaleString("de-DE", {
+    day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit",
+  });
+}
+
+interface UserEntry {
+  userId: string;
+  username: string;
+  count: number;
+  types: string[];
+  firstAt: string;
+}
+
+function buildLeaderboard(wins: BingoWin[]): UserEntry[] {
+  const map = new Map<string, UserEntry>();
+  for (const w of wins) {
+    if (!map.has(w.userId)) {
+      map.set(w.userId, { userId: w.userId, username: w.username, count: 0, types: [], firstAt: w.achievedAt });
+    }
+    const e = map.get(w.userId)!;
+    e.count++;
+    e.types.push(w.bingoType);
+  }
+  return Array.from(map.values()).sort(
+    (a, b) => b.count - a.count || new Date(a.firstAt).getTime() - new Date(b.firstAt).getTime(),
+  );
+}
+
+const BINGO_TYPE_ORDER = ["Reihe", "Spalte", "Diagonale"];
+
+function buildTypeMap(wins: BingoWin[]): Map<string, BingoWin[]> {
+  const map = new Map<string, BingoWin[]>();
+  for (const type of BINGO_TYPE_ORDER) map.set(type, []);
+  for (const w of wins) {
+    if (!map.has(w.bingoType)) map.set(w.bingoType, []);
+    map.get(w.bingoType)!.push(w);
+  }
+  return map;
+}
+
+// ── Ranking tab component ──────────────────────────────────────────────────
+
+interface RankingTabProps {
+  wins: BingoWin[];
+  onRefresh: () => void;
+  currentUserId: string | null;
+}
+
+function RankingTab({ wins, onRefresh, currentUserId }: RankingTabProps) {
+  const leaderboard = buildLeaderboard(wins);
+  const typeMap = buildTypeMap(wins);
+
+  if (wins.length === 0) {
+    return (
+      <div className={styles.rankEmpty}>
+        <p>Noch niemand hat ein Bingo erreicht.</p>
+        <p>Markiere Felder im Bingo-Board, um als Erster eingetragen zu werden!</p>
+        <button className={styles.refreshBtn} onClick={onRefresh}>↻ Aktualisieren</button>
+      </div>
+    );
+  }
+
+  return (
+    <>
+      <div className={styles.refreshRow}>
+        <span className={styles.rankInfo}>
+          {leaderboard.length} {leaderboard.length === 1 ? "Spieler" : "Spieler"} mit Bingo
+        </span>
+        <button className={styles.refreshBtn} onClick={onRefresh}>↻ Aktualisieren</button>
+      </div>
+
+      {/* Section 1: overall leaderboard */}
+      <section className={styles.rankSection}>
+        <h2 className={styles.rankSectionTitle}>👑 Gesamtrangliste</h2>
+        <div className={styles.leaderboard}>
+          {leaderboard.map((entry, idx) => {
+            const isSelf = entry.userId === currentUserId;
+            return (
+              <div key={entry.userId} className={`${styles.lbRow} ${isSelf ? styles.lbRowSelf : ""}`}>
+                <span className={`${styles.lbRank} ${idx === 0 ? styles.rankGold : idx === 1 ? styles.rankSilver : idx === 2 ? styles.rankBronze : ""}`}>
+                  {idx + 1}
+                </span>
+                <span className={styles.lbUsername}>
+                  {entry.username}
+                  {isSelf && <span className={styles.lbSelfTag}>du</span>}
+                </span>
+                <span className={styles.lbTypes}>
+                  {entry.types.map((t, i) => (
+                    <span key={i} className={styles.typeBadge}>{t}</span>
+                  ))}
+                </span>
+                <span className={styles.lbCount}>★ {entry.count}</span>
+                <span className={styles.lbDate}>{formatDate(entry.firstAt)}</span>
+              </div>
+            );
+          })}
+        </div>
+      </section>
+
+      {/* Section 2: by type */}
+      <section className={styles.rankSection}>
+        <h2 className={styles.rankSectionTitle}>📋 Bingo-Typen Übersicht</h2>
+        <div className={styles.typeGrid}>
+          {Array.from(typeMap.entries()).map(([type, typeWins]) => (
+            <div key={type} className={styles.typeCard}>
+              <div className={styles.typeCardTitle}>{type}</div>
+              {typeWins.length === 0 ? (
+                <p className={styles.typeCardEmpty}>Noch niemand</p>
+              ) : (
+                <ol className={styles.typeList}>
+                  {typeWins.map((w, i) => (
+                    <li key={w.userId + w.achievedAt} className={`${styles.typeEntry} ${w.userId === currentUserId ? styles.typeEntrySelf : ""}`}>
+                      <span className={`${styles.typeRank} ${i === 0 ? styles.rankGold : i === 1 ? styles.rankSilver : i === 2 ? styles.rankBronze : ""}`}>
+                        {i + 1}
+                      </span>
+                      <span className={styles.typeUsername}>{w.username}</span>
+                      <span className={styles.typeDate}>{formatDate(w.achievedAt)}</span>
+                    </li>
+                  ))}
+                </ol>
+              )}
+            </div>
+          ))}
+        </div>
+      </section>
+    </>
+  );
+}
 
 const ESC_TERMS = [
   "Key Change",
@@ -97,6 +230,10 @@ export default function BingoPage() {
   const navigate = useNavigate();
   const { userId, username } = useUser();
 
+  const [pageTab, setPageTab] = useState<"bingo" | "ranking">("bingo");
+  const [rankingWins, setRankingWins] = useState<BingoWin[] | null>(null);
+  const [rankingLoading, setRankingLoading] = useState(false);
+
   const [mode, setMode] = useState<"setup" | "play">(stored.mode ?? "setup");
   const [inputText, setInputText] = useState(stored.inputText ?? "");
   const [board, setBoard] = useState<string[]>(stored.board ?? Array(25).fill(""));
@@ -114,6 +251,22 @@ export default function BingoPage() {
       channelRef.current = null;
     };
   }, [userId]);
+
+  async function loadRanking() {
+    setRankingLoading(true);
+    setRankingWins(null);
+    try {
+      const wins = await fetchBingoWins();
+      setRankingWins(wins);
+    } finally {
+      setRankingLoading(false);
+    }
+  }
+
+  async function handleRankingTab() {
+    setPageTab("ranking");
+    if (!rankingWins && !rankingLoading) await loadRanking();
+  }
 
   function persist(patch: Partial<BingoStorage>) {
     const state: BingoStorage = { inputText, board, marked, doShuffle, mode, ...patch };
@@ -156,6 +309,12 @@ export default function BingoPage() {
     persist({ marked: newMarked });
     if (userId) void saveBingoBoard(userId, board, newMarked, newLines.length);
 
+    if (newlyCompleted.length > 0 && userId) {
+      for (const line of newlyCompleted) {
+        void insertBingoWin(userId, getBingoType(line));
+      }
+    }
+
     if (newlyCompleted.length > 0 && username && channelRef.current) {
       for (const line of newlyCompleted) {
         void Promise.resolve(
@@ -197,7 +356,36 @@ export default function BingoPage() {
       </header>
 
       <main className={styles.main}>
-        {mode === "setup" ? (
+        {/* Page-level tabs */}
+        <div className={styles.pageTabs}>
+          <button
+            className={pageTab === "bingo" ? styles.pageTabActive : styles.pageTab}
+            onClick={() => setPageTab("bingo")}
+          >
+            🎯 Bingo
+          </button>
+          <button
+            className={pageTab === "ranking" ? styles.pageTabActive : styles.pageTab}
+            onClick={handleRankingTab}
+          >
+            🏆 Bingo-Rangliste
+          </button>
+        </div>
+
+        {/* Ranking tab */}
+        {pageTab === "ranking" && (
+          rankingLoading || !rankingWins ? (
+            <div className={styles.loadingBox}>
+              <div className={styles.spinner} />
+              <p className={styles.loadingText}>Lade Rangliste…</p>
+            </div>
+          ) : (
+            <RankingTab wins={rankingWins} onRefresh={loadRanking} currentUserId={userId} />
+          )
+        )}
+
+        {/* Bingo tab */}
+        {pageTab === "bingo" && (mode === "setup" ? (
           <div className={styles.setup}>
             <h2 className={styles.setupTitle}>Bingo-Board konfigurieren</h2>
             <p className={styles.setupHint}>Gib bis zu 25 Begriffe ein – ein Begriff pro Zeile.</p>
@@ -282,7 +470,7 @@ export default function BingoPage() {
               ← Board neu konfigurieren
             </button>
           </div>
-        )}
+        ))}
       </main>
     </div>
   );
