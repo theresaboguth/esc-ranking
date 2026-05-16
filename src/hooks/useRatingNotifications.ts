@@ -52,7 +52,7 @@ export function useRatingNotifications(
          row.show + row.wow_faktor + row.esc_feeling) / 6;
 
       const contestant = CONTESTANTS.find(
-        (c) => c.countryCode === row.country_code && !c.isGuest,
+        (c) => c.countryCode === row.country_code,
       );
       if (!contestant) return;
 

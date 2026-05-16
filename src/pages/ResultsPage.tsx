@@ -9,7 +9,7 @@ import { fetchGlobalRatings } from "../lib/supabase";
 import type { GlobalData, GlobalCountryRating } from "../lib/supabase";
 import styles from "./ResultsPage.module.css";
 
-const competitors = CONTESTANTS.filter((c) => !c.isGuest);
+const competitors = CONTESTANTS;
 
 interface RankedCountry {
   name: string;

@@ -46,7 +46,7 @@ type RatingRow = {
   users: { username: string } | null;
 };
 
-const competitors = CONTESTANTS.filter((c) => !c.isGuest);
+const competitors = CONTESTANTS;
 
 // ── Fetch ──────────────────────────────────────────────────────────────────
 
