@@ -1,5 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useUser } from "../context/UserContext";
+import { saveBingoBoard } from "../lib/supabase";
 import styles from "./BingoPage.module.css";
 
 const ESC_TERMS = [
@@ -84,6 +86,7 @@ function detectBingoLines(marked: boolean[]): number[][] {
 export default function BingoPage() {
   const stored = loadStored();
   const navigate = useNavigate();
+  const { userId } = useUser();
 
   const [mode, setMode] = useState<"setup" | "play">(stored.mode ?? "setup");
   const [inputText, setInputText] = useState(stored.inputText ?? "");
@@ -116,15 +119,16 @@ export default function BingoPage() {
     setMarked(newMarked);
     setMode("play");
     persist({ board: finalBoard, marked: newMarked, mode: "play" });
+    if (userId) void saveBingoBoard(userId, finalBoard, newMarked, 0);
   }
 
-  // Markierung eines Feldes toggeln
   function toggleCell(i: number) {
     if (!board[i]) return;
     const newMarked = [...marked];
     newMarked[i] = !newMarked[i];
     setMarked(newMarked);
     persist({ marked: newMarked });
+    if (userId) void saveBingoBoard(userId, board, newMarked, detectBingoLines(newMarked).length);
   }
 
   function handleReset() {
