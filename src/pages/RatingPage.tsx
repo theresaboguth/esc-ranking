@@ -21,17 +21,13 @@ function useArtistImage(
   slug: string,
   countryCode: string,
   pressImageUrl?: string,
-  escPressImagePath?: string,
+  escPressImageUrl?: string,
 ) {
-  // v2 busts stale "NONE" entries cached before ESC-fallback was added
+  // v2 key — only caches the Wikipedia result (URL or "NONE")
   const cacheKey = `wiki_img_v2_${countryCode}`;
-  const escUrl = escPressImagePath
-    ? `https://www.eurovision.com/thumbs/1020x1020/data/images/2026/artists/${escPressImagePath}`
-    : null;
 
-  const [imageUrl, setImageUrl] = useState<string | null>(() => {
-    if (pressImageUrl) return pressImageUrl;
-    if (!countryCode) return null;
+  const [wikiUrl, setWikiUrl] = useState<string | null>(() => {
+    if (pressImageUrl || !countryCode) return null;
     const cached = localStorage.getItem(cacheKey);
     return cached && cached !== "NONE" ? cached : null;
   });
@@ -41,12 +37,11 @@ function useArtistImage(
   });
 
   useEffect(() => {
-    if (pressImageUrl) { setImageUrl(pressImageUrl); setLoading(false); return; }
-    if (!countryCode) { setLoading(false); return; }
+    if (pressImageUrl || !countryCode) { setLoading(false); return; }
 
     const cached = localStorage.getItem(cacheKey);
     if (cached !== null) {
-      setImageUrl(cached !== "NONE" ? cached : null);
+      setWikiUrl(cached !== "NONE" ? cached : null);
       setLoading(false);
       return;
     }
@@ -55,52 +50,29 @@ function useArtistImage(
     setLoading(true);
 
     async function load() {
-      // Stage 1: Wikipedia thumbnail
+      let url: string | null = null;
       if (slug) {
         try {
           const r = await fetch(
             `https://en.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(slug)}`,
           );
           const data = await r.json() as { thumbnail?: { source: string } };
-          const url = data?.thumbnail?.source ?? null;
-          if (url) {
-            if (!cancelled) {
-              localStorage.setItem(cacheKey, url);
-              setImageUrl(url);
-              setLoading(false);
-            }
-            return;
-          }
+          url = data?.thumbnail?.source ?? null;
         } catch { /* fall through */ }
       }
-
-      // Stage 2: ESC official press image
-      if (escUrl) {
-        const ok = await new Promise<boolean>((resolve) => {
-          const img = new Image();
-          img.onload = () => resolve(true);
-          img.onerror = () => resolve(false);
-          img.src = escUrl;
-        });
-        if (ok && !cancelled) {
-          localStorage.setItem(cacheKey, escUrl);
-          setImageUrl(escUrl);
-          setLoading(false);
-          return;
-        }
-      }
-
-      // Stage 3: no image available
       if (!cancelled) {
-        localStorage.setItem(cacheKey, "NONE");
-        setImageUrl(null);
+        localStorage.setItem(cacheKey, url ?? "NONE");
+        setWikiUrl(url);
         setLoading(false);
       }
     }
 
     void load();
     return () => { cancelled = true; };
-  }, [slug, cacheKey, pressImageUrl, countryCode, escUrl]);
+  }, [slug, cacheKey, pressImageUrl, countryCode]);
+
+  // Priority: explicit press photo > Wikipedia thumbnail > ESCplus (rendered directly)
+  const imageUrl = pressImageUrl ?? (loading ? null : (wikiUrl ?? escPressImageUrl ?? null));
 
   return { imageUrl, loading };
 }
@@ -111,13 +83,16 @@ export default function RatingPage() {
   const { userId } = useUser();
   const contestant = CONTESTANTS.find((c) => c.countryCode === code);
 
-  // Hook must run unconditionally (before any early return)
   const { imageUrl: heroImageUrl, loading: heroLoading } = useArtistImage(
     contestant?.wikipediaSlug ?? "",
     contestant?.countryCode ?? "",
     contestant?.pressImageUrl,
-    contestant?.escPressImagePath,
+    contestant?.escPressImageUrl,
   );
+
+  // Reset when navigating to a different country
+  const [heroImgFailed, setHeroImgFailed] = useState(false);
+  useEffect(() => { setHeroImgFailed(false); }, [heroImageUrl]);
 
   const [ratings, setRatings] = useState<CategoryRatings>(EMPTY);
 
@@ -141,14 +116,20 @@ export default function RatingPage() {
     ? Object.values(ratings).reduce((a, b) => a + b, 0) / Object.values(ratings).length
     : null;
 
-  // Shared hero: full-width image banner + info bar
+  const showImage = heroImageUrl && !heroImgFailed;
+
   const hero = (
     <>
       <div className={styles.heroBanner}>
         {heroLoading ? (
           <div className={styles.heroSpinner} />
-        ) : heroImageUrl ? (
-          <img src={heroImageUrl} alt={contestant.artist} className={styles.heroImg} />
+        ) : showImage ? (
+          <img
+            src={heroImageUrl}
+            alt={contestant.artist}
+            className={styles.heroImg}
+            onError={() => setHeroImgFailed(true)}
+          />
         ) : (
           <div className={styles.heroPlaceholder}>
             <span className={styles.heroPlaceholderMic}>🎤</span>
