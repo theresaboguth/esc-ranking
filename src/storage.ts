@@ -33,6 +33,7 @@ export function saveRating(
           {
             user_id: userId,
             country_code: rating.countryCode,
+            semi_final: 0,
             musik: rating.ratings.musik,
             performance: rating.ratings.performance,
             kostuem: rating.ratings.kostuem,

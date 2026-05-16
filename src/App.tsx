@@ -18,6 +18,12 @@ function RequireUser({ children }: { children: ReactNode }) {
   return <>{children}</>;
 }
 
+function RequireGuest({ children }: { children: ReactNode }) {
+  const { userId } = useUser();
+  if (userId) return <Navigate to="/" replace />;
+  return <>{children}</>;
+}
+
 // AppRoutes lives inside UserProvider so it can read userId and manage toasts
 function AppRoutes() {
   const { userId, username } = useUser();
@@ -44,7 +50,7 @@ function AppRoutes() {
   return (
     <>
       <Routes>
-        <Route path="/login" element={<LoginPage />} />
+        <Route path="/login" element={<RequireGuest><LoginPage /></RequireGuest>} />
         <Route path="/" element={<RequireUser><HomePage /></RequireUser>} />
         <Route path="/rate/:code" element={<RequireUser><RatingPage /></RequireUser>} />
         <Route path="/results" element={<RequireUser><ResultsPage /></RequireUser>} />
