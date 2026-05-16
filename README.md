@@ -1,6 +1,6 @@
-# 🌟 Eurovision Song Contest Ranking 2025
+# 🌟 Eurovision Song Contest Ranking 2026
 
-Persönliche Bewertungs-App für den Eurovision Song Contest 2025 – gebaut mit React, Vite und TypeScript.
+Persönliche Bewertungs-App für den Eurovision Song Contest 2026 – gebaut mit React, Vite und TypeScript.
 
 ## Features
 

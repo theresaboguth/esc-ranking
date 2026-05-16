@@ -121,7 +121,7 @@ export default function RatingPage() {
         </div>
         <div className={styles.heroInfoText}>
           <span className={styles.countryName}>{contestant.country}</span>
-          <span className={styles.escLabel}>ESC 2026 · Halbfinale {contestant.semiFinal}</span>
+          <span className={styles.escLabel}>ESC 2026 · Grand Final 🏆</span>
         </div>
         {avg !== null && (
           <div className={styles.avgBadge}>
@@ -134,27 +134,9 @@ export default function RatingPage() {
     </>
   );
 
-  if (contestant.isGuest) {
-    return (
-      <div className={styles.page}>
-        <div className={styles.container}>
-          <button className={styles.backBtn} onClick={() => navigate("/")}>← Zurück</button>
-          {hero}
-          <div className={styles.guestNotice}>
-            <span className={styles.guestNoticeIcon}>🎤</span>
-            <div>
-              <strong>Gastauftritt – nicht bewertbar</strong>
-              <p>Dieses Land tritt auf, nimmt aber nicht am Wettbewerb teil.</p>
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
   function handleSave() {
     if (!code) return;
-    saveRating({ countryCode: code, ratings }, userId, contestant?.semiFinal);
+    saveRating({ countryCode: code, ratings }, userId);
     navigate("/");
   }
 

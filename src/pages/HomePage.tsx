@@ -1,4 +1,3 @@
-import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { CONTESTANTS } from "../data/contestants";
 import type { Contestant } from "../data/contestants";
@@ -13,12 +12,9 @@ function getArtistImageUrl(c: Contestant): string | null {
 
 export default function HomePage() {
   const navigate = useNavigate();
-  const [activeSF, setActiveSF] = useState<1 | 2>(1);
   const ratings = getAllRatings();
 
-  const visible = CONTESTANTS.filter((c) => c.semiFinal === activeSF);
-  const visibleCompetitors = visible.filter((c) => !c.isGuest);
-  const ratedCount = visibleCompetitors.filter((c) => ratings[c.countryCode]).length;
+  const ratedCount = CONTESTANTS.filter((c) => ratings[c.countryCode]).length;
 
   return (
     <div className={styles.page}>
@@ -28,14 +24,12 @@ export default function HomePage() {
             <span className={styles.logoStar}>★</span>
             <div>
               <h1 className={styles.title}>Eurovision</h1>
-              <p className={styles.subtitle}>
-                Song Contest 2026 · Halbfinale {activeSF}
-              </p>
+              <p className={styles.subtitle}>ESC 2026 – Grand Final 🏆</p>
             </div>
           </div>
           <div className={styles.headerRight}>
             <span className={styles.progress}>
-              {ratedCount}/{visibleCompetitors.length} bewertet
+              {ratedCount}/{CONTESTANTS.length} bewertet
             </span>
             <button
               className={styles.resultsBtn}
@@ -49,26 +43,8 @@ export default function HomePage() {
       </header>
 
       <main className={styles.main}>
-        {/* SF toggle */}
-        <div className={styles.sfToggle}>
-          <button
-            className={`${styles.sfBtn} ${activeSF === 1 ? styles.sfBtnActive : ""}`}
-            onClick={() => setActiveSF(1)}
-          >
-            1. Halbfinale
-            <span className={styles.sfDate}>12. Mai</span>
-          </button>
-          <button
-            className={`${styles.sfBtn} ${activeSF === 2 ? styles.sfBtnActive : ""}`}
-            onClick={() => setActiveSF(2)}
-          >
-            2. Halbfinale
-            <span className={styles.sfDate}>14. Mai</span>
-          </button>
-        </div>
-
         <div className={styles.grid}>
-          {visible.map((c) => {
+          {CONTESTANTS.map((c) => {
             const rating = ratings[c.countryCode];
             const avg = rating ? calcAverage(rating) : null;
             const isRated = rating != null;
@@ -78,11 +54,7 @@ export default function HomePage() {
               <button
                 key={c.countryCode}
                 className={`${styles.cardOuter} ${
-                  c.isGuest
-                    ? styles.guestOuter
-                    : isRated
-                    ? styles.ratedOuter
-                    : styles.unratedOuter
+                  isRated ? styles.ratedOuter : styles.unratedOuter
                 }`}
                 onClick={() => navigate(`/rate/${c.countryCode}`)}
               >
@@ -96,29 +68,22 @@ export default function HomePage() {
                         className={styles.flag}
                       />
                       <span className={styles.runOrder}>{c.runningOrder}</span>
-                      {isRated && !c.isGuest && (
+                      {isRated && (
                         <span className={styles.checkmark}>✓</span>
-                      )}
-                      {c.isGuest && (
-                        <span className={styles.guestBadge}>Gast</span>
                       )}
                     </div>
                     <div className={styles.cardBody}>
                       <span className={styles.countryName}>{c.country}</span>
                       <span className={styles.artistName}>{c.artist}</span>
-                      {!c.isGuest &&
-                        (isRated && avg !== null ? (
-                          <span className={styles.avgScore}>
-                            <span className={styles.avgStar}>★</span>
-                            {avg.toFixed(1)}
-                          </span>
-                        ) : (
-                          <span className={styles.notRated}>
-                            Noch nicht bewertet
-                          </span>
-                        ))}
-                      {c.isGuest && (
-                        <span className={styles.guestLabel}>Gastauftritt</span>
+                      {isRated && avg !== null ? (
+                        <span className={styles.avgScore}>
+                          <span className={styles.avgStar}>★</span>
+                          {avg.toFixed(1)}
+                        </span>
+                      ) : (
+                        <span className={styles.notRated}>
+                          Noch nicht bewertet
+                        </span>
                       )}
                     </div>
                   </div>
@@ -139,7 +104,7 @@ export default function HomePage() {
                     )}
                     <div className={styles.backOverlay}>
                       <span className={styles.backCountry}>{c.country}</span>
-                      {isRated && avg !== null && !c.isGuest && (
+                      {isRated && avg !== null && (
                         <span className={styles.backScore}>★ {avg.toFixed(1)}</span>
                       )}
                     </div>

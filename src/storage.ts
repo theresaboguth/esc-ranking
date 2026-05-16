@@ -20,7 +20,6 @@ export function getRating(countryCode: string): CategoryRatings | null {
 export function saveRating(
   rating: CountryRating,
   userId?: string | null,
-  semiFinal?: number,
 ): void {
   const all = getAllRatings();
   all[rating.countryCode] = rating.ratings;
@@ -34,7 +33,6 @@ export function saveRating(
           {
             user_id: userId,
             country_code: rating.countryCode,
-            semi_final: semiFinal ?? 1,
             musik: rating.ratings.musik,
             performance: rating.ratings.performance,
             kostuem: rating.ratings.kostuem,
