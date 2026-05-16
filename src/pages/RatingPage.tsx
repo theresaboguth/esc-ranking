@@ -132,7 +132,9 @@ export default function RatingPage() {
           />
         ) : (
           <div className={styles.heroPlaceholder}>
-            <span className={styles.heroPlaceholderMic}>🎤</span>
+            <span className={styles.heroPlaceholderInitial}>
+              {contestant.artist.charAt(0).toUpperCase()}
+            </span>
           </div>
         )}
         <div className={styles.heroOverlay}>
@@ -151,7 +153,7 @@ export default function RatingPage() {
         </div>
         <div className={styles.heroInfoText}>
           <span className={styles.countryName}>{contestant.country}</span>
-          <span className={styles.escLabel}>ESC 2026 · Grand Final 🏆</span>
+          <span className={styles.escLabel}>ESC 2026 · Grand Final</span>
         </div>
         {avg !== null && (
           <div className={styles.avgBadge}>
@@ -191,7 +193,6 @@ export default function RatingPage() {
           {CATEGORIES.map((cat) => (
             <div key={cat.key} className={styles.category}>
               <div className={styles.catHeader}>
-                <span className={styles.catEmoji}>{cat.emoji}</span>
                 <div>
                   <div className={styles.catLabel}>{cat.label}</div>
                   <div className={styles.catDesc}>{cat.description}</div>
@@ -221,7 +222,7 @@ export default function RatingPage() {
           )}
           <button className={styles.saveBtn} onClick={handleSave} disabled={!allRated}>
             {allRated
-              ? "💾 Bewertung speichern"
+              ? "Bewertung speichern"
               : `Noch ${Object.values(ratings).filter((v) => v === 0).length} Kategorien ausstehend`}
           </button>
         </div>

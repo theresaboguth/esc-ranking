@@ -26,12 +26,6 @@ export default function LoginPage() {
   return (
     <div className={styles.page}>
       <div className={styles.card}>
-        <div className={styles.stars}>
-          <span className={styles.star}>★</span>
-          <span className={styles.star}>★</span>
-          <span className={styles.star}>★</span>
-        </div>
-
         <h1 className={styles.title}>ESC 2026</h1>
         <p className={styles.subtitle}>Ranking App</p>
 

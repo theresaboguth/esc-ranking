@@ -21,10 +21,9 @@ export default function HomePage() {
       <header className={styles.header}>
         <div className={styles.headerInner}>
           <div className={styles.logo}>
-            <span className={styles.logoStar}>★</span>
             <div>
               <h1 className={styles.title}>Eurovision</h1>
-              <p className={styles.subtitle}>ESC 2026 – Grand Final 🏆</p>
+              <p className={styles.subtitle}>ESC 2026 – Grand Final</p>
             </div>
           </div>
           <div className={styles.headerRight}>
@@ -35,14 +34,14 @@ export default function HomePage() {
               className={styles.bingoBtn}
               onClick={() => navigate("/bingo")}
             >
-              🎱 Bingo
+              Bingo
             </button>
             <button
               className={styles.resultsBtn}
               onClick={() => navigate("/results")}
               disabled={Object.keys(ratings).length === 0}
             >
-              📊 Auswertung
+              Auswertung
             </button>
           </div>
         </div>

@@ -60,7 +60,7 @@ function SingleToast({ toast, onRemove }: { toast: Toast; onRemove: () => void }
 
       {/* Body */}
       <p className={styles.toastMsg}>
-        🗳️ <strong>{toast.username}</strong> hat abgestimmt!
+        <strong>{toast.username}</strong> hat abgestimmt
       </p>
       <p className={styles.toastScore}>
         Ø{" "}

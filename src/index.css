@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800;900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
 
 *, *::before, *::after {
   box-sizing: border-box;
@@ -6,32 +6,59 @@
   padding: 0;
 }
 
+/* ── Design tokens ─────────────────────────────────────────────────────────── */
 :root {
-  --purple: #6B2FA0;
+  /* Backgrounds — original purple-dark palette */
+  --bg:          #0d0816;
+  --bg2:         #160d26;
+  --card:        #1a1030;
+  --card-hover:  #221540;
+
+  /* Text */
+  --text:        #f0e8ff;
+  --text-muted:  #9980bb;
+
+  /* Primary brand colors */
+  --purple:       #6B2FA0;
   --purple-light: #9B59D0;
-  --purple-dark: #3D1A5C;
-  --cyan: #00D4FF;
-  --cyan-dim: #00a8cc;
-  --gold: #FFD700;
-  --gold-dim: #ccaa00;
-  --bg: #0d0816;
-  --bg2: #160d26;
-  --card: #1a1030;
-  --card-hover: #221540;
-  --text: #f0e8ff;
-  --text-muted: #9980bb;
-  --border: rgba(107, 47, 160, 0.4);
-  --radius: 16px;
+  --purple-dark:  #3D1A5C;
+  --cyan:         #00D4FF;
+  --cyan-dim:     #00a8cc;
+  --gold:         #FFD700;
+  --gold-dim:     #ccaa00;
+
+  /* Aliases used in module files */
+  --primary:      #6B2FA0;
+  --primary-h:    #5a2488;
+  --primary-sub:  rgba(107, 47, 160, 0.15);
+
+  /* Borders */
+  --border:        rgba(107, 47, 160, 0.4);
+  --border-strong: rgba(107, 47, 160, 0.65);
+
+  /* Status */
+  --success: #22C55E;
+  --warning: #F59E0B;
+  --danger:  #EF4444;
+
+  /* Radii — original rounder values */
+  --radius:    16px;
   --radius-sm: 10px;
+  --radius-lg: 20px;
+
+  /* Typography */
+  --font: 'Inter', system-ui, -apple-system, sans-serif;
 }
 
 html, body {
   min-height: 100vh;
   background: var(--bg);
   color: var(--text);
-  font-family: 'Montserrat', sans-serif;
-  font-size: 16px;
+  font-family: var(--font);
+  font-size: 15px;
   line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 body {
@@ -40,29 +67,7 @@ body {
     radial-gradient(ellipse at 80% 80%, rgba(0, 212, 255, 0.08) 0%, transparent 60%),
     var(--bg);
   min-height: 100vh;
-  position: relative;
   overflow-x: hidden;
-}
-
-body::before {
-  content: '';
-  position: fixed;
-  inset: 0;
-  background-image:
-    radial-gradient(1px 1px at 10% 15%, rgba(255,255,255,0.6) 0%, transparent 100%),
-    radial-gradient(1px 1px at 25% 40%, rgba(255,255,255,0.4) 0%, transparent 100%),
-    radial-gradient(1.5px 1.5px at 40% 10%, rgba(255,255,255,0.7) 0%, transparent 100%),
-    radial-gradient(1px 1px at 55% 60%, rgba(255,255,255,0.3) 0%, transparent 100%),
-    radial-gradient(1px 1px at 70% 25%, rgba(255,255,255,0.5) 0%, transparent 100%),
-    radial-gradient(2px 2px at 80% 50%, rgba(255,215,0,0.4) 0%, transparent 100%),
-    radial-gradient(1px 1px at 90% 80%, rgba(255,255,255,0.6) 0%, transparent 100%),
-    radial-gradient(1.5px 1.5px at 15% 70%, rgba(0,212,255,0.3) 0%, transparent 100%),
-    radial-gradient(1px 1px at 60% 85%, rgba(255,255,255,0.4) 0%, transparent 100%),
-    radial-gradient(1px 1px at 35% 90%, rgba(255,255,255,0.3) 0%, transparent 100%),
-    radial-gradient(1px 1px at 5% 50%, rgba(255,255,255,0.5) 0%, transparent 100%),
-    radial-gradient(1.5px 1.5px at 95% 10%, rgba(255,215,0,0.3) 0%, transparent 100%);
-  pointer-events: none;
-  z-index: 0;
 }
 
 #root {
@@ -71,23 +76,17 @@ body::before {
   min-height: 100vh;
 }
 
-a {
-  color: inherit;
-  text-decoration: none;
-}
+a  { color: inherit; text-decoration: none; }
+button { cursor: pointer; border: none; background: none; font-family: inherit; }
+img { display: block; }
 
-button {
-  cursor: pointer;
-  border: none;
-  background: none;
-  font-family: inherit;
-}
-
-img {
-  display: block;
-}
-
-::-webkit-scrollbar { width: 8px; }
+::-webkit-scrollbar { width: 6px; }
 ::-webkit-scrollbar-track { background: var(--bg2); }
-::-webkit-scrollbar-thumb { background: var(--purple); border-radius: 4px; }
+::-webkit-scrollbar-thumb { background: var(--purple); border-radius: 3px; }
 ::-webkit-scrollbar-thumb:hover { background: var(--purple-light); }
+
+:focus-visible {
+  outline: 2px solid var(--cyan);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
