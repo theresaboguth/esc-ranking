@@ -3,10 +3,15 @@ import styles from "./NotificationToast.module.css";
 
 export interface Toast {
   id: string;
-  countryCode: string;
-  countryName: string;
-  username: string;
-  avg: number;
+  kind?: "rating" | "bingo";
+  // rating-specific
+  countryCode?: string;
+  countryName?: string;
+  username?: string;
+  avg?: number;
+  // bingo-specific
+  bingoUsername?: string;
+  bingoType?: string;
 }
 
 // ── Single toast ───────────────────────────────────────────────────────────
@@ -30,11 +35,12 @@ function SingleToast({ toast, onRemove }: { toast: Toast; onRemove: () => void }
     };
   }, [dismiss]);
 
+  const avg = toast.avg ?? 0;
   const scoreColor =
-    toast.avg >= 4.5 ? "#FFD700"
-    : toast.avg >= 3.5 ? "#22c55e"
-    : toast.avg >= 2.5 ? "#eab308"
-    : toast.avg >= 1.5 ? "#f97316"
+    avg >= 4.5 ? "#FFD700"
+    : avg >= 3.5 ? "#22c55e"
+    : avg >= 2.5 ? "#eab308"
+    : avg >= 1.5 ? "#f97316"
     : "#ef4444";
 
   return (
@@ -43,7 +49,7 @@ function SingleToast({ toast, onRemove }: { toast: Toast; onRemove: () => void }
       <div className={styles.toastHeader}>
         <div className={styles.toastCountryRow}>
           <img
-            src={`https://flagcdn.com/w40/${toast.countryCode.toLowerCase()}.png`}
+            src={`https://flagcdn.com/w40/${(toast.countryCode ?? "").toLowerCase()}.png`}
             alt={toast.countryName}
             className={styles.toastFlag}
           />
@@ -65,13 +71,49 @@ function SingleToast({ toast, onRemove }: { toast: Toast; onRemove: () => void }
       <p className={styles.toastScore}>
         Ø{" "}
         <span style={{ color: scoreColor, fontWeight: 800 }}>
-          {toast.avg.toFixed(1)}
+          {avg.toFixed(1)}
         </span>{" "}
         Punkte für {toast.countryName}
       </p>
 
       {/* Progress bar */}
       <div className={styles.toastProgress} />
+    </div>
+  );
+}
+
+// ── Bingo toast ────────────────────────────────────────────────────────────
+
+function BingoSingleToast({ toast, onRemove }: { toast: Toast; onRemove: () => void }) {
+  const [visible, setVisible] = useState(false);
+  const removeRef = useRef(onRemove);
+  removeRef.current = onRemove;
+
+  const dismiss = useCallback(() => {
+    setVisible(false);
+    setTimeout(() => removeRef.current(), 340);
+  }, []);
+
+  useEffect(() => {
+    const raf = requestAnimationFrame(() => setVisible(true));
+    const timer = setTimeout(dismiss, 8000);
+    return () => {
+      cancelAnimationFrame(raf);
+      clearTimeout(timer);
+    };
+  }, [dismiss]);
+
+  return (
+    <div className={`${styles.toast} ${styles.toastBingo} ${visible ? styles.toastVisible : ""}`}>
+      <div className={styles.toastHeader}>
+        <span className={styles.toastBingoIcon}>🎉</span>
+        <button className={styles.toastClose} onClick={dismiss} aria-label="Schließen">✕</button>
+      </div>
+      <p className={styles.toastMsg}>
+        <strong>{toast.bingoUsername}</strong> hat ein BINGO!
+      </p>
+      <p className={styles.toastScore}>{toast.bingoType}</p>
+      <div className={`${styles.toastProgress} ${styles.toastProgressBingo}`} />
     </div>
   );
 }
@@ -90,9 +132,13 @@ export default function NotificationToastContainer({
   if (toasts.length === 0) return null;
   return (
     <div className={styles.container}>
-      {toasts.map((t) => (
-        <SingleToast key={t.id} toast={t} onRemove={() => onRemove(t.id)} />
-      ))}
+      {toasts.map((t) =>
+        t.kind === "bingo" ? (
+          <BingoSingleToast key={t.id} toast={t} onRemove={() => onRemove(t.id)} />
+        ) : (
+          <SingleToast key={t.id} toast={t} onRemove={() => onRemove(t.id)} />
+        )
+      )}
     </div>
   );
 }

@@ -2,6 +2,7 @@ import { useState, useCallback } from "react";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { UserProvider, useUser } from "./context/UserContext";
 import { useRatingNotifications } from "./hooks/useRatingNotifications";
+import { useBingoNotifications } from "./hooks/useBingoNotifications";
 import NotificationToastContainer from "./components/NotificationToast";
 import type { Toast } from "./components/NotificationToast";
 import LoginPage from "./pages/LoginPage";
@@ -19,7 +20,7 @@ function RequireUser({ children }: { children: ReactNode }) {
 
 // AppRoutes lives inside UserProvider so it can read userId and manage toasts
 function AppRoutes() {
-  const { userId } = useUser();
+  const { userId, username } = useUser();
 
   const [toasts, setToasts] = useState<Toast[]>([]);
 
@@ -36,6 +37,9 @@ function AppRoutes() {
   }, []);
 
   useRatingNotifications(userId, addToast);
+  useBingoNotifications(username, useCallback((data) => {
+    addToast({ kind: "bingo", ...data });
+  }, [addToast]));
 
   return (
     <>

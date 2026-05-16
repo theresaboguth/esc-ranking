@@ -1,8 +1,10 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { useUser } from "../context/UserContext";
-import { saveBingoBoard } from "../lib/supabase";
+import { saveBingoBoard, supabase } from "../lib/supabase";
 import styles from "./BingoPage.module.css";
+
+type BingoChannel = ReturnType<typeof supabase.channel>;
 
 const ESC_TERMS = [
   "Key Change",
@@ -83,16 +85,35 @@ function detectBingoLines(marked: boolean[]): number[][] {
   return lines;
 }
 
+function getBingoType(line: number[]): string {
+  const diff = line[1] - line[0];
+  if (diff === 1) return "Reihe";
+  if (diff === 5) return "Spalte";
+  return "Diagonale";
+}
+
 export default function BingoPage() {
   const stored = loadStored();
   const navigate = useNavigate();
-  const { userId } = useUser();
+  const { userId, username } = useUser();
 
   const [mode, setMode] = useState<"setup" | "play">(stored.mode ?? "setup");
   const [inputText, setInputText] = useState(stored.inputText ?? "");
   const [board, setBoard] = useState<string[]>(stored.board ?? Array(25).fill(""));
   const [marked, setMarked] = useState<boolean[]>(stored.marked ?? Array(25).fill(false));
   const [doShuffle, setDoShuffle] = useState(stored.doShuffle ?? true);
+
+  const channelRef = useRef<BingoChannel | null>(null);
+
+  useEffect(() => {
+    if (!userId) return;
+    const channel = supabase.channel("bingo-events").subscribe();
+    channelRef.current = channel;
+    return () => {
+      void supabase.removeChannel(channel);
+      channelRef.current = null;
+    };
+  }, [userId]);
 
   function persist(patch: Partial<BingoStorage>) {
     const state: BingoStorage = { inputText, board, marked, doShuffle, mode, ...patch };
@@ -126,9 +147,26 @@ export default function BingoPage() {
     if (!board[i]) return;
     const newMarked = [...marked];
     newMarked[i] = !newMarked[i];
+
+    const prevLineStrings = new Set(detectBingoLines(marked).map((l) => l.join(",")));
+    const newLines = detectBingoLines(newMarked);
+    const newlyCompleted = newLines.filter((l) => !prevLineStrings.has(l.join(",")));
+
     setMarked(newMarked);
     persist({ marked: newMarked });
-    if (userId) void saveBingoBoard(userId, board, newMarked, detectBingoLines(newMarked).length);
+    if (userId) void saveBingoBoard(userId, board, newMarked, newLines.length);
+
+    if (newlyCompleted.length > 0 && username && channelRef.current) {
+      for (const line of newlyCompleted) {
+        void Promise.resolve(
+          channelRef.current.send({
+            type: "broadcast",
+            event: "bingo",
+            payload: { username, bingoType: getBingoType(line) },
+          })
+        ).catch(() => {});
+      }
+    }
   }
 
   function handleReset() {

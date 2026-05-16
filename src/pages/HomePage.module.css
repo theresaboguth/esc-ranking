@@ -90,9 +90,9 @@
 
 /* Secondary action */
 .bingoBtn {
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid var(--border);
-  color: var(--text-muted);
+  background: rgba(255, 255, 255, 0.07);
+  border: 1px solid var(--border-strong);
+  color: var(--text);
   font-family: var(--font, inherit);
   font-weight: 600;
   font-size: 13px;
@@ -101,12 +101,34 @@
   cursor: pointer;
   transition: all 0.2s ease;
   white-space: nowrap;
+  opacity: 1;
 }
 
 .bingoBtn:hover {
-  color: var(--text);
-  border-color: var(--border-strong);
-  background: rgba(107, 47, 160, 0.15);
+  border-color: var(--cyan);
+  background: rgba(0, 212, 255, 0.1);
+  transform: scale(1.02);
+}
+
+/* Logout */
+.logoutBtn {
+  font-family: var(--font, inherit);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-muted);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  padding: 4px 12px;
+  transition: all 0.2s;
+  background: transparent;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.logoutBtn:hover {
+  color: #ff6b6b;
+  border-color: rgba(255, 107, 107, 0.45);
+  background: rgba(255, 107, 107, 0.07);
 }
 
 /* ── Grid ────────────────────────────────────────────────── */

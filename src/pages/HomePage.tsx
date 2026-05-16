@@ -2,6 +2,7 @@ import { useNavigate } from "react-router-dom";
 import { CONTESTANTS } from "../data/contestants";
 import type { Contestant } from "../data/contestants";
 import { getAllRatings, calcAverage } from "../storage";
+import { useUser } from "../context/UserContext";
 import styles from "./HomePage.module.css";
 
 function getArtistImageUrl(c: Contestant): string | null {
@@ -12,7 +13,13 @@ function getArtistImageUrl(c: Contestant): string | null {
 
 export default function HomePage() {
   const navigate = useNavigate();
+  const { username, logout } = useUser();
   const ratings = getAllRatings();
+
+  function handleLogout() {
+    logout();
+    navigate("/login");
+  }
 
   const ratedCount = CONTESTANTS.filter((c) => ratings[c.countryCode]).length;
 
@@ -39,10 +46,14 @@ export default function HomePage() {
             <button
               className={styles.resultsBtn}
               onClick={() => navigate("/results")}
-              disabled={Object.keys(ratings).length === 0}
             >
               Auswertung
             </button>
+            {username && (
+              <button className={styles.logoutBtn} onClick={handleLogout}>
+                {username} · Logout
+              </button>
+            )}
           </div>
         </div>
       </header>

@@ -118,6 +118,24 @@
   to   { transform: scaleX(0); }
 }
 
+.toastBingo {
+  border-left-color: #FFD700;
+  border-color: rgba(255, 215, 0, 0.35);
+  box-shadow:
+    0 8px 28px rgba(0, 0, 0, 0.5),
+    0 0 20px rgba(255, 215, 0, 0.15);
+}
+
+.toastBingoIcon {
+  font-size: 20px;
+  line-height: 1;
+}
+
+.toastProgressBingo {
+  background: linear-gradient(90deg, #FFD700, #FFA500);
+  animation-duration: 8s;
+}
+
 @media (max-width: 480px) {
   .container { bottom: 12px; right: 8px; left: 8px; max-width: 100%; }
   .toast { width: 100%; }
