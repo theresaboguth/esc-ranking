@@ -6,7 +6,7 @@ import styles from "./HomePage.module.css";
 
 function getArtistImageUrl(c: Contestant): string | null {
   if (c.pressImageUrl) return c.pressImageUrl;
-  const cached = localStorage.getItem(`wiki_img_${c.countryCode}`);
+  const cached = localStorage.getItem(`wiki_img_v2_${c.countryCode}`);
   return cached && cached !== "NONE" ? cached : null;
 }
 

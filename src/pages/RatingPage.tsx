@@ -17,8 +17,17 @@ const EMPTY: CategoryRatings = {
   escFeeling: 0,
 };
 
-function useWikipediaImage(slug: string, countryCode: string, pressImageUrl?: string) {
-  const cacheKey = `wiki_img_${countryCode}`;
+function useArtistImage(
+  slug: string,
+  countryCode: string,
+  pressImageUrl?: string,
+  escPressImagePath?: string,
+) {
+  // v2 busts stale "NONE" entries cached before ESC-fallback was added
+  const cacheKey = `wiki_img_v2_${countryCode}`;
+  const escUrl = escPressImagePath
+    ? `https://www.eurovision.com/thumbs/1020x1020/data/images/2026/artists/${escPressImagePath}`
+    : null;
 
   const [imageUrl, setImageUrl] = useState<string | null>(() => {
     if (pressImageUrl) return pressImageUrl;
@@ -33,7 +42,7 @@ function useWikipediaImage(slug: string, countryCode: string, pressImageUrl?: st
 
   useEffect(() => {
     if (pressImageUrl) { setImageUrl(pressImageUrl); setLoading(false); return; }
-    if (!slug || !countryCode) { setLoading(false); return; }
+    if (!countryCode) { setLoading(false); return; }
 
     const cached = localStorage.getItem(cacheKey);
     if (cached !== null) {
@@ -42,17 +51,56 @@ function useWikipediaImage(slug: string, countryCode: string, pressImageUrl?: st
       return;
     }
 
+    let cancelled = false;
     setLoading(true);
-    fetch(`https://en.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(slug)}`)
-      .then((r) => r.json())
-      .then((data) => {
-        const url: string | null = data?.thumbnail?.source ?? null;
-        localStorage.setItem(cacheKey, url ?? "NONE");
-        setImageUrl(url);
-      })
-      .catch(() => { localStorage.setItem(cacheKey, "NONE"); setImageUrl(null); })
-      .finally(() => setLoading(false));
-  }, [slug, cacheKey, pressImageUrl, countryCode]);
+
+    async function load() {
+      // Stage 1: Wikipedia thumbnail
+      if (slug) {
+        try {
+          const r = await fetch(
+            `https://en.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(slug)}`,
+          );
+          const data = await r.json() as { thumbnail?: { source: string } };
+          const url = data?.thumbnail?.source ?? null;
+          if (url) {
+            if (!cancelled) {
+              localStorage.setItem(cacheKey, url);
+              setImageUrl(url);
+              setLoading(false);
+            }
+            return;
+          }
+        } catch { /* fall through */ }
+      }
+
+      // Stage 2: ESC official press image
+      if (escUrl) {
+        const ok = await new Promise<boolean>((resolve) => {
+          const img = new Image();
+          img.onload = () => resolve(true);
+          img.onerror = () => resolve(false);
+          img.src = escUrl;
+        });
+        if (ok && !cancelled) {
+          localStorage.setItem(cacheKey, escUrl);
+          setImageUrl(escUrl);
+          setLoading(false);
+          return;
+        }
+      }
+
+      // Stage 3: no image available
+      if (!cancelled) {
+        localStorage.setItem(cacheKey, "NONE");
+        setImageUrl(null);
+        setLoading(false);
+      }
+    }
+
+    void load();
+    return () => { cancelled = true; };
+  }, [slug, cacheKey, pressImageUrl, countryCode, escUrl]);
 
   return { imageUrl, loading };
 }
@@ -64,10 +112,11 @@ export default function RatingPage() {
   const contestant = CONTESTANTS.find((c) => c.countryCode === code);
 
   // Hook must run unconditionally (before any early return)
-  const { imageUrl: heroImageUrl, loading: heroLoading } = useWikipediaImage(
+  const { imageUrl: heroImageUrl, loading: heroLoading } = useArtistImage(
     contestant?.wikipediaSlug ?? "",
     contestant?.countryCode ?? "",
     contestant?.pressImageUrl,
+    contestant?.escPressImagePath,
   );
 
   const [ratings, setRatings] = useState<CategoryRatings>(EMPTY);
