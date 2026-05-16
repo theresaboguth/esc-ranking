@@ -672,6 +672,74 @@
 
 .matrixRowDim { opacity: 0.3; }
 
+/* ── Bingo ranking ───────────────────────────────────────── */
+.bingoList {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.bingoRow {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 10px 14px;
+  transition: all 0.2s;
+}
+
+.bingoRow:hover {
+  border-color: rgba(107, 47, 160, 0.6);
+  transform: translateX(3px);
+}
+
+.bingoRowSelf {
+  border-color: rgba(0, 212, 255, 0.4);
+  background: rgba(0, 212, 255, 0.04);
+}
+
+.bingoUsername {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text);
+  flex: 1;
+}
+
+.bingoSelfLabel {
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--cyan);
+  margin-left: 4px;
+  opacity: 0.75;
+}
+
+.bingoBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: rgba(255, 215, 0, 0.1);
+  border: 1px solid rgba(255, 215, 0, 0.28);
+  border-radius: 50px;
+  padding: 3px 10px;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--gold);
+  flex-shrink: 0;
+}
+
+.bingoEmpty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  text-align: center;
+  padding: 56px 24px;
+  color: var(--text-muted);
+  font-size: 14px;
+}
+
 /* ── Responsive ──────────────────────────────────────────── */
 @media (max-width: 600px) {
   .pageTitle { font-size: 22px; }

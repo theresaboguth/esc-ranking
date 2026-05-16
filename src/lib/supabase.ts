@@ -50,6 +50,54 @@ const competitors = CONTESTANTS;
 
 // ── Fetch ──────────────────────────────────────────────────────────────────
 
+// ── Bingo ranking types ────────────────────────────────────────────────────
+
+export interface BingoRankingEntry {
+  userId: string;
+  username: string;
+  bingoCount: number;
+  updatedAt: string;
+}
+
+type BingoRow = {
+  user_id: string;
+  bingo_count: number;
+  updated_at: string;
+  users: { username: string } | null;
+};
+
+export async function saveBingoBoard(
+  userId: string,
+  board: string[],
+  marked: boolean[],
+  bingoCount: number,
+): Promise<void> {
+  await supabase.from("bingo_boards").upsert(
+    { user_id: userId, board, marked, bingo_count: bingoCount, updated_at: new Date().toISOString() },
+    { onConflict: "user_id" },
+  );
+}
+
+export async function fetchBingoRanking(): Promise<BingoRankingEntry[]> {
+  const { data, error } = await supabase
+    .from("bingo_boards")
+    .select("user_id, bingo_count, updated_at, users(username)")
+    .gt("bingo_count", 0)
+    .order("bingo_count", { ascending: false })
+    .order("updated_at", { ascending: true });
+
+  if (error || !data) return [];
+
+  return (data as unknown as BingoRow[]).map((r) => ({
+    userId: r.user_id,
+    username: r.users?.username ?? r.user_id,
+    bingoCount: r.bingo_count,
+    updatedAt: r.updated_at,
+  }));
+}
+
+// ── Global ratings ─────────────────────────────────────────────────────────
+
 export async function fetchGlobalRatings(): Promise<GlobalData> {
   const { data, error } = await supabase
     .from("ratings")

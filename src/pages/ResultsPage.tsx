@@ -5,8 +5,8 @@ import { CATEGORIES } from "../types";
 import type { CategoryRatings } from "../types";
 import { getAllRatings, calcAverage } from "../storage";
 import { useUser } from "../context/UserContext";
-import { fetchGlobalRatings } from "../lib/supabase";
-import type { GlobalData, GlobalCountryRating } from "../lib/supabase";
+import { fetchGlobalRatings, fetchBingoRanking } from "../lib/supabase";
+import type { GlobalData, GlobalCountryRating, BingoRankingEntry } from "../lib/supabase";
 import styles from "./ResultsPage.module.css";
 
 const competitors = CONTESTANTS;
@@ -336,6 +336,60 @@ function GlobalTab({ data, onRefresh, currentUsername }: GlobalTabProps) {
   );
 }
 
+// ── Bingo tab ──────────────────────────────────────────────────────────────
+
+interface BingoTabProps {
+  data: BingoRankingEntry[];
+  onRefresh: () => void;
+  currentUserId: string | null;
+}
+
+function BingoTab({ data, onRefresh, currentUserId }: BingoTabProps) {
+  if (data.length === 0) {
+    return (
+      <div className={styles.bingoEmpty}>
+        <p>Noch niemand hat ein Bingo erreicht.</p>
+        <p>Spiel Bingo während des Grand Finals!</p>
+        <button className={styles.refreshBtn} onClick={onRefresh}>↻ Aktualisieren</button>
+      </div>
+    );
+  }
+
+  return (
+    <>
+      <div className={styles.refreshRow}>
+        <span className={styles.dataInfo}>
+          {data.length} {data.length === 1 ? "Spieler" : "Spieler"} mit Bingo
+        </span>
+        <button className={styles.refreshBtn} onClick={onRefresh}>↻ Aktualisieren</button>
+      </div>
+
+      <div className={styles.bingoList}>
+        {data.map((entry, idx) => {
+          const isSelf = entry.userId === currentUserId;
+          return (
+            <div
+              key={entry.userId}
+              className={`${styles.bingoRow} ${isSelf ? styles.bingoRowSelf : ""}`}
+            >
+              <span className={`${styles.rankNum} ${idx === 0 ? styles.rankGold : idx === 1 ? styles.rankSilver : idx === 2 ? styles.rankBronze : ""}`}>
+                {idx + 1}
+              </span>
+              <span className={styles.bingoUsername}>
+                {entry.username}
+                {isSelf && <span className={styles.bingoSelfLabel}>(du)</span>}
+              </span>
+              <span className={styles.bingoBadge}>
+                ★ {entry.bingoCount}× Bingo
+              </span>
+            </div>
+          );
+        })}
+      </div>
+    </>
+  );
+}
+
 function GlobalTableRow({ c, rank }: { c: GlobalCountryRating; rank: number }) {
   const hasRating = c.count > 0;
   const rankLabel = hasRating ? `${rank + 1}` : "—";
@@ -367,12 +421,14 @@ function GlobalTableRow({ c, rank }: { c: GlobalCountryRating; rank: number }) {
 
 export default function ResultsPage() {
   const navigate = useNavigate();
-  const { username, logout } = useUser();
+  const { username, userId, logout } = useUser();
   const allRatings = getAllRatings();
 
-  const [tab, setTab] = useState<"mine" | "global">("mine");
+  const [tab, setTab] = useState<"mine" | "global" | "bingo">("mine");
   const [globalData, setGlobalData] = useState<GlobalData | null>(null);
   const [globalLoading, setGlobalLoading] = useState(false);
+  const [bingoData, setBingoData] = useState<BingoRankingEntry[] | null>(null);
+  const [bingoLoading, setBingoLoading] = useState(false);
 
   function handleLogout() {
     logout();
@@ -394,6 +450,24 @@ export default function ResultsPage() {
     setTab("global");
     if (!globalData && !globalLoading) {
       await loadGlobalData();
+    }
+  }
+
+  async function loadBingoData() {
+    setBingoLoading(true);
+    setBingoData(null);
+    try {
+      const data = await fetchBingoRanking();
+      setBingoData(data);
+    } finally {
+      setBingoLoading(false);
+    }
+  }
+
+  async function handleBingoTab() {
+    setTab("bingo");
+    if (!bingoData && !bingoLoading) {
+      await loadBingoData();
     }
   }
 
@@ -437,6 +511,12 @@ export default function ResultsPage() {
             onClick={handleGlobalTab}
           >
             Globales Ranking
+          </button>
+          <button
+            className={tab === "bingo" ? styles.tabActive : styles.tab}
+            onClick={handleBingoTab}
+          >
+            Bingo-Ranking
           </button>
         </div>
 
@@ -485,6 +565,25 @@ export default function ResultsPage() {
               onRefresh={loadGlobalData}
               currentUsername={username}
             />
+          )
+        )}
+
+        {/* ── Bingo tab ── */}
+        {tab === "bingo" && (
+          bingoLoading || !bingoData ? (
+            <div className={styles.loadingBox}>
+              <div className={styles.spinner} />
+              <p className={styles.loadingText}>Lade Bingo-Ranking…</p>
+            </div>
+          ) : (
+            <section className={styles.rankingSection}>
+              <h2 className={styles.sectionTitle}>Bingo-Ranking</h2>
+              <BingoTab
+                data={bingoData}
+                onRefresh={loadBingoData}
+                currentUserId={userId}
+              />
+            </section>
           )
         )}
       </div>
