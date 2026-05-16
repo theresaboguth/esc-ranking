@@ -10,22 +10,26 @@
   cursor: pointer;
   padding: 2px;
   line-height: 1;
-  transition: transform 0.15s ease, color 0.15s ease;
-  color: rgba(255, 215, 0, 0.2);
+  transition: transform 0.12s ease, color 0.12s ease;
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
 .star:hover {
-  transform: scale(1.15);
+  transform: scale(1.12);
 }
 
 .star.filled {
-  color: #FFD700;
-  filter: drop-shadow(0 0 6px rgba(255, 215, 0, 0.6));
+  color: var(--gold);
 }
 
 .star.empty {
-  color: rgba(255, 255, 255, 0.15);
+  color: rgba(255, 255, 255, 0.12);
+}
+
+.star:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+  border-radius: 3px;
 }

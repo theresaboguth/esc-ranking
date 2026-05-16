@@ -28,7 +28,7 @@ function PodiumDisplay({ gold, silver, bronze }: PodiumProps) {
     <div className={styles.podium}>
       {silver && (
         <div className={`${styles.podiumSlot} ${styles.silver}`}>
-          <span className={styles.podiumMedal}>🥈</span>
+          <span className={`${styles.podiumRank} ${styles.rankSilver}`}>2</span>
           <img src={`https://flagcdn.com/w160/${silver.code.toLowerCase()}.png`} alt={silver.name} className={styles.podiumFlag} />
           <div className={styles.podiumName}>{silver.name}</div>
           <div className={styles.podiumScore}>★ {silver.avg.toFixed(2)}</div>
@@ -36,7 +36,7 @@ function PodiumDisplay({ gold, silver, bronze }: PodiumProps) {
         </div>
       )}
       <div className={`${styles.podiumSlot} ${styles.gold}`}>
-        <span className={styles.podiumMedal}>🥇</span>
+        <span className={`${styles.podiumRank} ${styles.rankGold}`}>1</span>
         <img src={`https://flagcdn.com/w160/${gold.code.toLowerCase()}.png`} alt={gold.name} className={styles.podiumFlag} />
         <div className={styles.podiumName}>{gold.name}</div>
         <div className={styles.podiumScore}>★ {gold.avg.toFixed(2)}</div>
@@ -44,7 +44,7 @@ function PodiumDisplay({ gold, silver, bronze }: PodiumProps) {
       </div>
       {bronze && (
         <div className={`${styles.podiumSlot} ${styles.bronze}`}>
-          <span className={styles.podiumMedal}>🥉</span>
+          <span className={`${styles.podiumRank} ${styles.rankBronze}`}>3</span>
           <img src={`https://flagcdn.com/w160/${bronze.code.toLowerCase()}.png`} alt={bronze.name} className={styles.podiumFlag} />
           <div className={styles.podiumName}>{bronze.name}</div>
           <div className={styles.podiumScore}>★ {bronze.avg.toFixed(2)}</div>
@@ -63,10 +63,10 @@ function RankList({ ranked }: { ranked: RankedCountry[] }) {
       {ranked.map((country, idx) => (
         <div
           key={country.code}
-          className={`${styles.rankRow} ${idx === 0 ? styles.rankFirst : idx === 1 ? styles.rankSecond : idx === 2 ? styles.rankThird : ""}`}
+          className={styles.rankRow}
         >
-          <span className={styles.rankNum}>
-            {idx === 0 ? "🥇" : idx === 1 ? "🥈" : idx === 2 ? "🥉" : `#${idx + 1}`}
+          <span className={`${styles.rankNum} ${idx === 0 ? styles.rankGold : idx === 1 ? styles.rankSilver : idx === 2 ? styles.rankBronze : ""}`}>
+            {idx + 1}
           </span>
           <img src={`https://flagcdn.com/w160/${country.code.toLowerCase()}.png`} alt={country.name} className={styles.rankFlag} />
           <span className={styles.rankName}>{country.name}</span>
@@ -89,17 +89,14 @@ function PersonalCatCards({ ranked }: { ranked: RankedCountry[] }) {
         const top3 = [...ranked].sort((a, b) => b.ratings[cat.key] - a.ratings[cat.key]).slice(0, 3);
         return (
           <div key={cat.key} className={styles.catCard}>
-            <div className={styles.catCardTitle}><span>{cat.emoji}</span><span>{cat.label}</span></div>
+            <div className={styles.catCardTitle}>{cat.label}</div>
             <ol className={styles.catList}>
               {top3.map((c, i) => (
                 <li key={c.code} className={styles.catItem}>
-                  <span className={styles.catRank}>{i === 0 ? "🥇" : i === 1 ? "🥈" : "🥉"}</span>
+                  <span className={`${styles.catRank} ${i === 0 ? styles.rankGold : i === 1 ? styles.rankSilver : styles.rankBronze}`}>{i + 1}</span>
                   <img src={`https://flagcdn.com/w80/${c.code.toLowerCase()}.png`} alt={c.name} className={styles.catFlag} />
                   <span className={styles.catName}>{c.name}</span>
-                  <span className={styles.catScore}>
-                    {"★".repeat(c.ratings[cat.key])}
-                    <span className={styles.catScoreEmpty}>{"★".repeat(5 - c.ratings[cat.key])}</span>
-                  </span>
+                  <span className={styles.catScore}>{c.ratings[cat.key]}/5</span>
                 </li>
               ))}
             </ol>
@@ -237,7 +234,7 @@ function GlobalTab({ data, onRefresh, currentUsername }: GlobalTabProps) {
       {/* Global podium */}
       {ratedCountries.length >= 1 && (
         <section className={styles.podiumSection}>
-          <h2 className={styles.sectionTitle}>🏆 Globales Podium</h2>
+          <h2 className={styles.sectionTitle}>Globales Podium</h2>
           <PodiumDisplay
             gold={{ name: gold.name, code: gold.code, avg: gold.avgTotal }}
             silver={silver ? { name: silver.name, code: silver.code, avg: silver.avgTotal } : undefined}
@@ -248,7 +245,7 @@ function GlobalTab({ data, onRefresh, currentUsername }: GlobalTabProps) {
 
       {/* Global rank table */}
       <section className={styles.rankingSection}>
-        <h2 className={styles.sectionTitle}>📋 Gesamtranking</h2>
+        <h2 className={styles.sectionTitle}>Gesamtranking</h2>
         <div className={styles.tableWrap}>
           <table className={styles.globalTable}>
             <thead>
@@ -275,7 +272,7 @@ function GlobalTab({ data, onRefresh, currentUsername }: GlobalTabProps) {
       {/* Rating matrix */}
       {data.byUser.length > 0 && (
         <section className={styles.rankingSection}>
-          <h2 className={styles.sectionTitle}>📋 Bewertungsmatrix</h2>
+          <h2 className={styles.sectionTitle}>Bewertungsmatrix</h2>
           <RatingMatrix data={data} />
         </section>
       )}
@@ -283,7 +280,7 @@ function GlobalTab({ data, onRefresh, currentUsername }: GlobalTabProps) {
       {/* Per-user ranking */}
       {data.byUser.length > 0 && (
         <section className={styles.rankingSection}>
-          <h2 className={styles.sectionTitle}>👤 Ranking pro Nutzer</h2>
+          <h2 className={styles.sectionTitle}>Ranking pro Nutzer</h2>
           <div className={styles.userSelectorRow}>
             <label className={styles.userSelectorLabel} htmlFor="user-select">Nutzer:</label>
             <select
@@ -310,7 +307,7 @@ function GlobalTab({ data, onRefresh, currentUsername }: GlobalTabProps) {
       {/* Category comparison */}
       {ratedCountries.length > 0 && (
         <section className={styles.catSection}>
-          <h2 className={styles.sectionTitle}>📊 Kategorie-Vergleich</h2>
+          <h2 className={styles.sectionTitle}>Kategorie-Vergleich</h2>
           <div className={styles.catGrid}>
             {CATEGORIES.map((cat) => {
               const top3 = [...ratedCountries]
@@ -318,11 +315,11 @@ function GlobalTab({ data, onRefresh, currentUsername }: GlobalTabProps) {
                 .slice(0, 3);
               return (
                 <div key={cat.key} className={styles.catCard}>
-                  <div className={styles.catCardTitle}><span>{cat.emoji}</span><span>{cat.label}</span></div>
+                  <div className={styles.catCardTitle}>{cat.label}</div>
                   <ol className={styles.catList}>
                     {top3.map((c, i) => (
                       <li key={c.code} className={styles.catItem}>
-                        <span className={styles.catRank}>{i === 0 ? "🥇" : i === 1 ? "🥈" : "🥉"}</span>
+                        <span className={`${styles.catRank} ${i === 0 ? styles.rankGold : i === 1 ? styles.rankSilver : styles.rankBronze}`}>{i + 1}</span>
                         <img src={`https://flagcdn.com/w80/${c.code.toLowerCase()}.png`} alt={c.name} className={styles.catFlag} />
                         <span className={styles.catName}>{c.name}</span>
                         <span className={styles.catScore}>{c.avgPerCategory[cat.key].toFixed(2)}</span>
@@ -341,12 +338,10 @@ function GlobalTab({ data, onRefresh, currentUsername }: GlobalTabProps) {
 
 function GlobalTableRow({ c, rank }: { c: GlobalCountryRating; rank: number }) {
   const hasRating = c.count > 0;
-  const rankLabel = hasRating
-    ? rank === 0 ? "🥇" : rank === 1 ? "🥈" : rank === 2 ? "🥉" : `#${rank + 1}`
-    : "—";
+  const rankLabel = hasRating ? `${rank + 1}` : "—";
   return (
-    <tr className={hasRating ? "" : styles.dimmed}>
-      <td className={styles.tdRank}>{rankLabel}</td>
+    <tr className={`${hasRating ? "" : styles.dimmed} ${hasRating && rank < 3 ? styles[["rowGold","rowSilver","rowBronze"][rank]] : ""}`}>
+      <td className={`${styles.tdRank} ${hasRating && rank < 3 ? styles[["rankGold","rankSilver","rankBronze"][rank]] : ""}`}>{rankLabel}</td>
       <td>
         <img
           src={`https://flagcdn.com/w40/${c.code.toLowerCase()}.png`}
@@ -427,10 +422,7 @@ export default function ResultsPage() {
 
         <button className={styles.backLink} onClick={() => navigate("/")}>← Zurück</button>
 
-        <h1 className={styles.pageTitle}>
-          <span className={styles.pageTitleStar}>★</span>
-          Auswertung
-        </h1>
+        <h1 className={styles.pageTitle}>Auswertung</h1>
 
         {/* Tab bar */}
         <div className={styles.tabs}>
@@ -438,13 +430,13 @@ export default function ResultsPage() {
             className={tab === "mine" ? styles.tabActive : styles.tab}
             onClick={() => setTab("mine")}
           >
-            ⭐ Mein Ranking
+            Mein Ranking
           </button>
           <button
             className={tab === "global" ? styles.tabActive : styles.tab}
             onClick={handleGlobalTab}
           >
-            🌍 Globales Ranking
+            Globales Ranking
           </button>
         </div>
 
@@ -452,15 +444,14 @@ export default function ResultsPage() {
         {tab === "mine" && (
           ranked.length === 0 ? (
             <div className={styles.emptyTab}>
-              <div className={styles.emptyIcon}>🌟</div>
-              <h2>Noch keine Bewertungen</h2>
+                  <h2>Noch keine Bewertungen</h2>
               <p>Bewerte zuerst einige Länder, um die Auswertung zu sehen.</p>
               <button className={styles.backBtn} onClick={() => navigate("/")}>← Zur Startseite</button>
             </div>
           ) : (
             <>
               <section className={styles.podiumSection}>
-                <h2 className={styles.sectionTitle}>🏆 Podium</h2>
+                <h2 className={styles.sectionTitle}>Podium</h2>
                 <PodiumDisplay
                   gold={{ name: gold.name, code: gold.code, avg: gold.avg }}
                   silver={silver ? { name: silver.name, code: silver.code, avg: silver.avg } : undefined}
@@ -469,12 +460,12 @@ export default function ResultsPage() {
               </section>
 
               <section className={styles.rankingSection}>
-                <h2 className={styles.sectionTitle}>📋 Gesamtranking</h2>
+                <h2 className={styles.sectionTitle}>Gesamtranking</h2>
                 <RankList ranked={ranked} />
               </section>
 
               <section className={styles.catSection}>
-                <h2 className={styles.sectionTitle}>🏅 Kategorie-Rankings</h2>
+                <h2 className={styles.sectionTitle}>Kategorie-Rankings</h2>
                 <PersonalCatCards ranked={ranked} />
               </section>
             </>
