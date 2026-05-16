@@ -28,7 +28,8 @@
       "Bash(npx tsc *)",
       "Bash(npx vite *)",
       "WebFetch(domain:escxtra.com)",
-      "Bash(npx tsx *)"
+      "Bash(npx tsx *)",
+      "WebFetch(domain:www.eurovision.tv)"
     ]
   }
 }
